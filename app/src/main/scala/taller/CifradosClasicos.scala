@@ -23,8 +23,22 @@ class CifradosClasicos {
 
   // Punto 1 -------------------------------------------------------------------
 
-  /** César con recursión lineal: una operación pendiente por letra. */
-  def cesar(m: Mensaje, k: Int): Mensaje = ???
+  /** Cifra cada carácter y concatena el resultado con el cifrado del resto. */
+  def cesar(mensaje: Mensaje, desplazamiento: Int): Mensaje = {
+    if (mensaje.isEmpty) ""
+    else {
+      val caracter = mensaje.head
+      val desplazamientoReducido = Math.floorMod(desplazamiento, letras)
+      val caracterCifrado =
+        if (esMinuscula(caracter)) {
+          val posicionOriginal = caracter.toInt - primera
+          val posicionCifrada = (posicionOriginal + desplazamientoReducido) % letras
+          (primera + posicionCifrada).toChar
+        } else caracter
+
+      caracterCifrado.toString + cesar(mensaje.tail, desplazamientoReducido)
+    }
+  }
 
   // Punto 2 -------------------------------------------------------------------
 

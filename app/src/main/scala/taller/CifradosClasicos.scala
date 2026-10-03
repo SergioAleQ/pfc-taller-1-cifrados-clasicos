@@ -66,7 +66,33 @@ class CifradosClasicos {
    * Cuenta las letras minúsculas del mensaje, de mayor a menor frecuencia y,
    * en empate, en orden alfabético. El recorrido es recursivo de cola.
    */
-  def frecuencias(m: Mensaje): Frecuencias = ???
+  def frecuencias(m: Mensaje): Frecuencias = {
+
+    def actConteo(c: Char, lista: Frecuencias): Frecuencias = {
+      if (lista.isEmpty) List((c,1))
+      else if (lista.head._1 == c) (c, lista.head._2 + 1) :: lista.tail
+      else lista.head :: actConteo(c, lista.tail)
+    }
+
+    @tailrec
+    def leer(texto: Mensaje, lista: Frecuencias): Frecuencias = {
+      if (texto.isEmpty) lista
+      else {
+        val c = texto.head
+        if (esMinuscula(c)) leer(texto.tail, actConteo(c, lista))
+        else leer(texto.tail, lista)
+      }
+    }
+
+    val conteo = leer(m, List.empty[(Char, Int)])
+    conteo.sortWith { (par1, par2) =>
+      val (char1, frec1) = par1
+      val (char2, frec2) = par2
+
+      if (frec1 != frec2) frec1 > frec2
+      else char1 < char2
+    }
+  }
 
   // Punto 4 -------------------------------------------------------------------
 

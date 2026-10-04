@@ -69,7 +69,7 @@ class CifradosClasicos {
   def frecuencias(m: Mensaje): Frecuencias = {
 
     def actConteo(c: Char, lista: Frecuencias): Frecuencias = {
-      if (lista.isEmpty) List((c,1))
+      if (lista.isEmpty) List((c, 1))
       else if (lista.head._1 == c) (c, lista.head._2 + 1) :: lista.tail
       else lista.head :: actConteo(c, lista.tail)
     }
@@ -100,21 +100,64 @@ class CifradosClasicos {
    * Supone que la letra más frecuente del mensaje cifrado es la 'e' del
    * original y devuelve la distancia entre las dos. Sin letras, cero.
    */
-  def desplazamientoProbable(m: Mensaje): Int = ???
+  def desplazamientoProbable(m: Mensaje): Int = {
+    val listaFrecuencias = frecuencias(m)
+    if (listaFrecuencias.isEmpty) {
+      0
+    }
+    else {
+      val tuplaMasFrecuente = listaFrecuencias.head
+      val letra = tuplaMasFrecuente._1
+      (letra - 'e' + 26) % 26
+    }
+  }
 
-  def romperCesar(m: Mensaje): Mensaje = ???
+  def romperCesar(m: Mensaje): Mensaje = {
+    val probable = desplazamientoProbable(m)
+    cesarCola(m, -probable)
+  }
+
+
 
   // Punto 5 -------------------------------------------------------------------
 
   /**
    * Cuántos mensajes de longitud n se forman con a letras sin dos iguales
-   *  seguidas .
+   * seguidas.
    */
-  def combinaciones(n: Int, a: Int): BigInt = ???
+  def combinaciones(n: Int, a: Int): BigInt = {
+    if (n == 0) BigInt(1)
+    else if (n == 1) BigInt(a)
+    else BigInt(a - 1) * combinaciones(n - 1, a)
+
+  }
 
   /**
    * Vigenère: cada letra se corre según la letra de la clave que le toca. Lo
    * que no es letra minúscula se copia y no consume clave.
    */
-  def vigenere(m: Mensaje, clave: Clave): Mensaje = ???
+  def vigenere(m: Mensaje, clave: Clave): Mensaje = {
+    if (clave.isEmpty) m
+    else {
+      @tailrec
+      def aux(mensajeRestante: List[Char], iClave: Int, acc: List[Char]): List[Char] = {
+        mensajeRestante match {
+          case Nil => acc.reverse
+
+          case c :: tail =>
+            if (c >= 'a' && c <= 'z') {
+
+              val despl = clave(iClave % clave.length) - 'a'
+              val nuevaLetra = ('a' + (c - 'a' + despl) % 26).toChar
+
+              aux(tail, iClave + 1, nuevaLetra :: acc)
+            } else {
+              aux(tail, iClave, c :: acc)
+            }
+        }
+      }
+
+      aux(m.toList, 0, Nil).mkString
+    }
+  }
 }

@@ -108,7 +108,7 @@ class CifradosClasicos {
 
   /**
    * Cuántos mensajes de longitud n se forman con a letras sin dos iguales
-   * seguidas.
+   *  seguidas .
    */
   def combinaciones(n: Int, a: Int): BigInt = ???
 

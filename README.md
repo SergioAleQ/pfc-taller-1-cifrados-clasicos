@@ -72,6 +72,141 @@ escribe usted, dentro de `CifradosClasicos.scala`.
 | 4 | `desplazamientoProbable(m: Mensaje): Int` y `romperCesar(m: Mensaje): Mensaje` | |
 | 5 | `combinaciones(n: Int, a: Int): BigInt` y `vigenere(m: Mensaje, clave: Clave): Mensaje` | |
 
+## Diagramas de inducción matemática
+
+En los diagramas, `P(n)` denota la propiedad que se quiere demostrar y `IH`
+la hipótesis inductiva. Para los métodos que no son recursivos se muestra su
+argumento de corrección directa; su comportamiento depende de las condiciones
+indicadas.
+
+### Punto 1: `cesar`
+
+Sea `P(n)` que cifrar un mensaje de longitud `n` produce, en cada posición, la
+letra desplazada módulo 26 (y conserva los demás caracteres).
+
+```mermaid
+flowchart TD
+    A["Base<br/>n = 0"] --> B["Mensaje vacío"]
+    B --> C["cesar('', k) = ''"]
+    C --> D["P(0)<br/>verdadera"]
+    E["Paso<br/>n > 0"] --> F["m = c :: resto<br/>|resto| = n - 1"]
+    F --> G["IH: cesar(resto, k)<br/>cifra correctamente"]
+    G --> H["Cifrar c si es minúscula;<br/>si no, conservarla"]
+    H --> I["Concatenar c cifrada<br/>con el cifrado del resto"]
+    I --> J["P(n)<br/>verdadera"]
+```
+
+### Punto 2: `cesarCola`
+
+Sea `P(n)` que, para cualquier acumulador `acc`, el resultado es `acc`
+seguido del cifrado César del mensaje restante.
+
+```mermaid
+flowchart TD
+    A["Base<br/>n = 0"] --> B["m está vacío"]
+    B --> C["Devuelve acc"]
+    C --> D["acc ++ cifrado('') = acc"]
+    D --> E["P(0)<br/>verdadera"]
+    F["Paso<br/>n > 0"] --> G["m = c :: resto"]
+    G --> H["IH: la llamada con resto<br/>completa el cifrado"]
+    H --> I["Añadir a acc c cifrada,<br/>o c si no es minúscula"]
+    I --> J["Continuar con resto"]
+    J --> K["Resultado = acc inicial<br/>++ cifrado(m)"]
+    K --> L["P(n)<br/>verdadera"]
+```
+
+### Punto 3: `frecuencias`
+
+Sea `P(n)` que, tras leer `n` caracteres, el conteo contiene exactamente las
+letras minúsculas procesadas con sus cantidades. Al terminar, ordenar la lista
+no cambia esos conteos y la deja de mayor a menor frecuencia y alfabéticamente
+en caso de empate.
+
+```mermaid
+flowchart TD
+    A["Base<br/>n = 0"] --> B["No quedan<br/>caracteres"]
+    B --> C["Devolver conteo<br/>acumulado"]
+    C --> D["P(0)<br/>verdadera"]
+    E["Paso<br/>n > 0"] --> F["texto = c :: resto"]
+    F --> G["IH: el conteo acumulado<br/>y el resto dan el total"]
+    G --> H{"¿c es minúscula?"}
+    H -->|Sí| I["Incrementar c<br/>o agregar (c, 1)"]
+    H -->|No| J["Dejar el conteo<br/>sin cambios"]
+    I --> K["Procesar resto<br/>con el conteo nuevo"]
+    J --> K
+    K --> L["Al final, ordenar:<br/>frecuencia y letra"]
+    L --> M["P(n)<br/>verdadera"]
+```
+
+### Punto 4: `desplazamientoProbable`
+
+Esta función no es recursiva, por lo que se justifica directamente. La
+estimación es correcta bajo la suposición de que la letra cifrada más frecuente
+corresponde a la `e` del mensaje original.
+
+```mermaid
+flowchart TD
+    A["Calcular<br/>frecuencias(m)"] --> B{"¿Lista vacía?"}
+    B -->|Sí| C["Devolver 0<br/>(sin letras)"]
+    B -->|No| D["La primera letra<br/>es la más frecuente"]
+    D --> E["Suponer que corresponde<br/>a la e original"]
+    E --> F["k = (letra - e + 26)<br/>módulo 26"]
+    F --> G["Devolver k:<br/>desplazamiento estimado"]
+```
+
+### Punto 4: `romperCesar`
+
+Esta función tampoco es recursiva: compone la estimación anterior con el César
+iterativo. La recuperación es correcta si la estimación del desplazamiento es
+correcta.
+
+```mermaid
+flowchart TD
+    A["Mensaje<br/>cifrado m"] --> B["Estimar k =<br/>desplazamientoProbable(m)"]
+    B --> C["Aplicar<br/>cesarCola(m, -k)"]
+    C --> D["Retroceder k posiciones<br/>módulo 26"]
+    D --> E["Recupera el original<br/>si k es correcto"]
+```
+
+### Punto 5: `combinaciones`
+
+Sea `P(n)` que el resultado cuenta las cadenas de longitud `n` formadas con
+`a` letras sin dos iguales consecutivas, para `n >= 0` y `a >= 1`.
+
+```mermaid
+flowchart TD
+    A["Casos base"] -->|n = 0| B["1 cadena:<br/>la vacía"]
+    A -->|n = 1| C["a cadenas:<br/>una por letra"]
+    B --> D["P(0)<br/>verdadera"]
+    C --> E["P(1)<br/>verdadera"]
+    F["Paso<br/>n >= 2"] --> G["IH: combinaciones(n - 1, a)<br/>cuenta los prefijos"]
+    G --> H["La última letra tiene<br/>a - 1 opciones"]
+    H --> I["combinaciones(n, a)<br/>= (a - 1) * combinaciones(n - 1, a)"]
+    I --> J["P(n)<br/>verdadera"]
+```
+
+### Punto 5: `vigenere`
+
+Si la clave está vacía, la función devuelve el mensaje sin cambios. Con clave
+no vacía, sea `P(n)` que `aux` transforma correctamente los primeros `n`
+caracteres procesados: las minúsculas consumen una posición de clave y los
+demás caracteres se copian sin consumirla.
+
+```mermaid
+flowchart TD
+    A{"¿Clave vacía?"} -->|Sí| B["Devolver m<br/>sin cambios"]
+    A -->|No| C["Base: no quedan<br/>caracteres"]
+    C --> D["Devolver<br/>acc.reverse"]
+    D --> E["P(0): no hay<br/>caracteres por cifrar"]
+    F["Paso<br/>queda c :: resto"] --> G["IH: aux procesa el resto<br/>con el estado actualizado"]
+    G --> H{"¿c es minúscula?"}
+    H -->|Sí| I["Cifrar con la clave;<br/>avanzar su índice"]
+    H -->|No| J["Copiar c;<br/>mantener el índice"]
+    I --> K["Añadir al acumulador<br/>y procesar resto"]
+    J --> K
+    K --> L["P(n) verdadera;<br/>reverse restaura el orden"]
+```
+
 En el punto 2, agregue la anotación `@tailrec` cuando la función esté
 escrita: el compilador comprueba que la llamada recursiva sea lo último que
 hace, y rechaza el programa si no lo es.

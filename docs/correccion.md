@@ -107,17 +107,16 @@ Si el mensaje no contiene minúsculas, `frecuencias` devuelve una lista vacía y
 la función devuelve $0$, tal como define el caso sin letras. Si sí contiene,
 por la corrección de `frecuencias`, su primera tupla tiene una letra con la
 mayor frecuencia. Bajo la suposición estadística descrita arriba, esa letra
-es la `e` original desplazada. La diferencia entre su posición y la de `e`,
-reducida módulo $26$, es el desplazamiento que la produjo:
+corresponde a la `e` original después de aplicar el desplazamiento. La función
+calcula cuántos lugares se avanzó en el alfabeto desde `e` hasta la letra más
+frecuente; al llegar a `z`, el conteo continúa desde `a`. Por ejemplo, si la
+letra más frecuente es `h`, el desplazamiento probable es 3, porque de `e` a
+`h` hay tres lugares.
 
-$$
-k = (\operatorname{pos}(\text{letra}) - \operatorname{pos}(e)) \bmod 26.
-$$
-
-La expresión del código `(letra - 'e' + 26) % 26` calcula ese residuo para las
-letras minúsculas. Por ello devuelve el desplazamiento correcto cuando se
-cumple la suposición estadística; sin ella, el resultado es solo una
-estimación.
+En el código, `(letra - 'e' + 26) % 26` hace ese cálculo usando los valores
+numéricos de las letras y deja el resultado entre 0 y 25. Por ello devuelve el
+desplazamiento correcto cuando se cumple la suposición estadística; sin ella,
+el resultado es solo una estimación.
 
 ## Punto 4: `romperCesar`
 

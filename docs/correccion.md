@@ -1,279 +1,190 @@
-# Ejemplo de informe de corrección
-
-Fundamentos de Programación Funcional y Concurrente.
-Documento realizado por el docente Juan Francisco Díaz.
-
-## 1. Argumentar la corrección de programas recursivos
-
-Sea $f : A \to B$ una función, y $A$ un conjunto definido recursivamente
-(recordar la definición de Matemáticas Discretas I), como por ejemplo los
-naturales o las listas.
-
-Sea $P_f$ un programa recursivo (lineal o en árbol) desarrollado en Scala (o en
-cualquier lenguaje de programación) hecho para calcular $f$:
-
-```scala
-def Pf(a: A): B = { // Pf recibe a de tipo A, y devuelve f(a) de tipo B
-  ...
-}
-```
-
-¿Cómo argumentar que $P_f(a)$ siempre devuelve $f(a)$ como respuesta? Es decir,
-¿cómo argumentar que $P_f$ es correcto con respecto a su especificación?
-
-La respuesta es sencilla: demostrando el siguiente teorema.
-
-```math
-\forall a \in A : P_f(a) == f(a)
-```
-
-Cuando uno tiene que demostrar que algo se cumple para todos los elementos de
-un conjunto definido recursivamente, es natural usar inducción estructural. En
-términos prácticos, esto significa demostrar que:
-
-- Para cada valor básico $a$ de $A$, se tiene que $P_f(a) == f(a)$.
-- Para cada valor $a \in A$ construido recursivamente a partir de otro(s)
-  valor(es) $a' \in A$, se tiene que
-  $P_f(a') == f(a') \rightarrow P_f(a) == f(a)$. (Esta es la hipótesis de
-  inducción).
-
-### Ejemplo: factorial recursivo
-
-Sea $f : \mathbb{N} \to \mathbb{N}$ la función que calcula el factorial de un
-número natural, es decir, $f(n) = n!$. Y sea $P_f$ el siguiente programa en
-Scala:
-
-```scala
-def Pf(n: Int): Int = { // Pf recibe n de tipo Int, y devuelve n! de tipo Int
-  if (n == 0) 1 else n * Pf(n - 1)
-}
-```
-
-Vamos a demostrar que $\forall n \in \mathbb{N} : P_f(n) == n!$
-
-**Caso base:** $n = 0$
-
-```math
-P_f(0) \rightarrow \text{if } (0 == 0)\ 1 \text{ else } 0 \ast P_f(-1) \rightarrow 1
-```
-
-Por otro lado, $f(0) = 0! = 1$. Entonces $P_f(0) == f(0)$.
-
-**Caso de inducción:** $n = k + 1$, $k \geq 0$. Hay que demostrar:
-$P_f(k) == f(k) \rightarrow P_f(k + 1) == f(k + 1)$
-
-```math
-P_f(k+1) \rightarrow \text{if } (k+1 == 0)\ 1 \text{ else } (k+1) \ast P_f(k) \rightarrow (k+1) \ast P_f(k)
-```
-
-Usando la hipótesis de inducción (HI):
-
-```math
-\rightarrow (k+1) \ast k! = (k+1)!
-```
-
-Por lo tanto, $P_f(k + 1) == f(k + 1)$.
-
-Concluimos por inducción que $\forall n \in \mathbb{N} : P_f(n) == n!$
-
-### Ejemplo: el máximo de una lista
-
-Sea $f : \text{List}[\mathbb{N}] \to \mathbb{N}$ la función que calcula el
-máximo de una lista de enteros positivos, no vacía. Y sea $P_f$ el siguiente
-programa en Scala:
-
-```scala
-def maxLin(l: List[Int]): Int = {
-  if (l.tail.isEmpty) l.head
-  else math.max(maxLin(l.tail), l.head)
-}
-```
-
-Demostraremos que:
-
-```math
-\forall n \in \mathbb{N} \setminus \{0\} : P_f(\text{List}(a_1, a_2, \ldots, a_n)) == f(\text{List}(a_1, a_2, \ldots, a_n))
-```
-
-**Caso base:** $n = 1$
-
-```math
-P_f(\text{List}(a_1)) \rightarrow \text{if } \text{List}(a_1).\text{tail.isEmpty then } \text{List}(a_1).\text{head else } \ldots \rightarrow \text{List}(a_1).\text{head} \rightarrow a_1
-```
-
-Por otro lado, $f(\text{List}(a_1)) = a_1$. Entonces
-$P_f(\text{List}(a_1)) == f(\text{List}(a_1))$.
-
-**Caso de inducción:** $n = k + 1$, $k \geq 1$. Se debe demostrar:
-
-```math
-P_f(\text{List}(b_1, b_2, \ldots, b_k)) == f(\text{List}(b_1, b_2, \ldots, b_k)) \rightarrow P_f(\text{List}(a_1, a_2, \ldots, a_{k+1})) == f(\text{List}(a_1, a_2, \ldots, a_{k+1}))
-```
-
-Empecemos por calcular qué devuelve $P_f$ usando el modelo de sustitución:
-
-```math
-P_f(L) \rightarrow \text{if } L.\text{tail.isEmpty then } L.\text{head else math.max}(P_f(L.\text{tail}), L.\text{head})
-```
-
-```math
-\rightarrow \text{math.max}(P_f(\text{List}(a_2, \ldots, a_{k+1})), a_1)
-```
-
-Sea $b = P_f(\text{List}(a_2, \ldots, a_{k+1}))$; por la hipótesis de
-inducción, $b = f(\text{List}(a_2, \ldots, a_{k+1}))$. Hay dos posibilidades:
-
-- Si $\text{math.max}(b, a_1) = b$, entonces $b \geq a_1$ y
- $b == f(\text{List}(a_1, a_2, \ldots, a_{k+1}))$.
-- Si $\text{math.max}(b, a_1) = a_1$, entonces $a_1 \geq b$ y
- $a_1 == f(\text{List}(a_1, a_2, \ldots, a_{k+1}))$.
-
-Por lo tanto, $P_f(L) == f(L)$.
-
-Concluimos por inducción que:
-
-```math
-\forall n \in \mathbb{N} \setminus \{0\} : P_f(\text{List}(a_1, a_2, \ldots, a_n)) == f(\text{List}(a_1, a_2, \ldots, a_n))
-```
-
-## 2. Argumentar la corrección de programas iterativos
-
-Para argumentar la corrección de programas iterativos, se debe formalizar cómo
-es la iteración. Esto implica definir:
-
-- Cómo se representa un estado de la iteración, $s$.
-- Cuál es el estado inicial, $s_0$.
-- Cuál es el estado final (o cómo se reconoce que un estado es final): $s_f$.
-- Qué condición (o predicado) cumple todo estado: $\text{Inv}(s)$ (invariante
-  de la iteración).
-- El mecanismo para pasar de un estado al siguiente: $\text{transformar}(s)$.
-  Si $s_i$ es el estado $i$, entonces $\text{transformar}(s_i) = s_{i+1}$.
-
-Un programa iterativo tiene la siguiente forma:
-
-```scala
-def Pf(a: A): B = { // Pf recibe a de tipo A, y devuelve f(a) de tipo B
-  def Pf_iter(s: Estado): B =
-    if (esFinal(s)) respuesta(s) else Pf_iter(transformar(s))
-  Pf_iter(s0)
-}
-```
-
-Demostración de corrección:
-
-- $\text{Inv}(s_0)$: el estado inicial cumple la condición invariante.
-- Si $(s_i \neq s_f \land \text{Inv}(s_i)) \rightarrow \text{Inv}(\text{transformar}(s_i))$:
-  el nuevo estado cumple la condición invariante si el estado anterior la
-  cumplía.
-- De lo anterior se concluye $\text{Inv}(s_f)$, es decir, el estado final
-  cumple la condición invariante. Luego,
-  $\text{Inv}(s_f) \rightarrow \text{respuesta}(s_f) == f(a)$.
-- Finalmente, demostrar que siempre se llega al estado final $s_f$. Esto
-  implica que
-  $P_f(a) == \text{iter}(s_0) == \text{respuesta}(s_f) == f(a)$.
-
-### Ejemplo: factorial iterativo
-
-Considere el siguiente programa iterativo en Scala para calcular la función
-factorial:
-
-```scala
-def Pf(n: Int): Int = { // Pf recibe n de tipo Int, y devuelve n! de tipo Int
-  def Pf_iter(i: Int, n: Int, ac: Int): Int =
-    if (i > n) ac else Pf_iter(i + 1, n, i * ac)
-  Pf_iter(1, n, 1)
-}
-```
-
-Este programa implementa el siguiente proceso iterativo:
-
-- Un estado $s = (i, n, ac)$.
-- El estado inicial es $s_0 = (1, n, 1)$.
-- $(i, n, ac)$ es final si $i > n$, o lo que es lo mismo, si $i = n + 1$.
-- La invariante de ciclo es
-  $\text{Inv}(i, n, ac) \equiv i \leq n + 1 \land ac = (i-1)!$.
-  La invariante de ciclo es una relación que SIEMPRE se cumple en el ciclo.
-- $\text{transformar}((i, n, ac)) = (i+1, n, i \ast ac)$.
-
-Ahora, demostramos los puntos mencionados:
-
-**1.** $\text{Inv}(s_0)$: el estado inicial cumple la condición invariante.
-
-```math
-s_0 = (1, n, 1) \implies 1 \leq n + 1 \land 1 = 0!
-```
-
-**2.** La invariante se mantiene con la transformación de estados,
-$(s_i \neq s_f \land \text{Inv}(s_i)) \rightarrow \text{Inv}(\text{transformar}(s_i))$:
-
-1. Primer cambio, $i = i + 1$, lo que implica $ac = ((i+1) - 1)! = i!$.
-2. Segundo cambio, $ac = i \ast ac$, entonces $ac = (i - 1)! \ast i = i!$.
-3. Como se puede ver en ambos cambios indicados en la transformación, la
-   invariante se mantiene.
-
-**3.** $\text{Inv}(s_f) \rightarrow \text{respuesta}(s_f) == f(a)$
-
-```math
-(n + 1 \leq n + 1) \land ac = ((n+1)-1)! \rightarrow ac == n!
-```
-
-**4.** En cada paso, la componente $i$ del estado incrementa, acercándose a $n+1$.
-Después de $n$ iteraciones, se alcanza $n+1$.
-
-Esto implica que $P_f(n) == \text{iter}(1, n, 1) == n!$
-
-### Ejemplo: el máximo de una lista
-
-Se desea calcular el máximo de una lista de enteros positivos, no vacía. Sea
-$f : \text{List}[\mathbb{N}] \to \mathbb{N}$ la función que calcula ese valor.
-Y sea $P_f$ el siguiente programa en Scala:
-
-```scala
-def maxIt(l: List[Int]): Int = {
-  def maxAux(max: Int, l: List[Int]): Int = {
-    if (l.isEmpty) max
-    else maxAux(math.max(max, l.head), l.tail)
-  }
-  maxAux(l.head, l.tail)
-}
-```
-
-Este programa implementa el siguiente proceso iterativo:
-
-- Un estado $s = (max, l)$ donde $l = \text{List}(a_i, a_{i+1}, \ldots, a_k)$
-  es una cola de $L$.
-- El estado inicial es
-  $s_0 = (L.\text{head}, L.\text{tail}) = (a_1, \text{List}(a_2, \ldots, a_k))$.
-- $s = (max, l)$ es final si $l$ es vacía.
-- $\text{Inv}(max, l) \equiv l = \text{List}(a_i, a_{i+1}, \ldots, a_k) \land max = f(\text{List}(a_1, a_2, \ldots, a_{i-1}))$.
-- $\text{transformar}((max, l)) = (nmax, l.\text{tail})$ donde $nmax = max$ si
-  $max \geq l.\text{head}$, y $nmax = l.\text{head}$ si no.
-
-Demostración de los puntos:
-
-**1.** $\text{Inv}(s_0)$: el estado inicial cumple la condición invariante.
-
-```math
-s_0 = (a_1, \text{List}(a_2, \ldots, a_k)) \implies a_1 = f(\text{List}(a_1))
-```
-
-**2.** $(s_i \neq s_f \land \text{Inv}(s_i)) \rightarrow \text{Inv}(\text{transformar}(s_i))$
-
-```math
-\neg\, l.\text{isEmpty} \land l = \text{List}(a_i, a_{i+1}, \ldots, a_k) \land max = f(\text{List}(a_1, a_2, \ldots, a_{i-1}))
-```
-
-```math
-\rightarrow l.\text{tail} = \text{List}(a_{i+1}, \ldots, a_k) \land nmax = f(\text{List}(a_1, \ldots, a_i))
-```
-
-**3.** $\text{Inv}(s_f) \rightarrow \text{respuesta}(s_f) == f(a)$
-
-```math
-\text{Inv}((max, \text{List}())) \rightarrow max = f(\text{List}(a_1, \ldots, a_k))
-```
-
-**4.** En cada paso, la lista $l$ se reduce, acercándose a ser vacía. Después de
-$k$ iteraciones, $l = \text{List}()$.
-
-Esto implica que $P_f(L) == \text{maxAux}(L.\text{head}, L.\text{tail}) == f(L)$
+# Informe de corrección
+
+## Especificación y supuestos
+
+Se argumenta la corrección de las funciones implementadas en
+`CifradosClasicos.scala`. Para los cifrados, se consideran minúsculas del
+alfabeto inglés, con posiciones de $0$ a $25$; cualquier otro carácter se
+copia sin cambio. Los desplazamientos se interpretan módulo $26$.
+
+En `desplazamientoProbable` y `romperCesar`, la conclusión depende de la
+suposición estadística del programa: una letra más frecuente del texto cifrado
+corresponde a la `e` del texto original. Para `combinaciones`, el dominio es
+$n \geq 0$ y $a \geq 1$. Para Vigenère, se supone una clave no vacía formada
+por letras minúsculas; la clave vacía se trata explícitamente.
+
+## Punto 1: `cesar`
+
+Sea $C_k(c)$ el carácter obtenido al desplazar $c$ en $k$ posiciones módulo
+$26$ si $c$ es minúscula, y $c$ mismo en caso contrario. La especificación
+para un mensaje $m$ es aplicar $C_k$ a cada carácter, conservando el orden.
+Demostraremos por inducción estructural sobre el mensaje que
+`cesar(m, k)` cumple esta especificación.
+
+**Caso base.** Si $m = ""$, el código devuelve `""`. Aplicar el desplazamiento
+carácter por carácter a una cadena vacía también da `""`; por tanto, la
+propiedad se cumple.
+
+**Paso inductivo.** Sea $m = c :: r$, donde $c$ es el primer carácter y $r$ el
+resto. Como hipótesis inductiva, supongamos que `cesar(r, k)` cifra
+correctamente todos los caracteres de $r$. El código calcula la versión
+reducida del desplazamiento módulo $26$, transforma $c$ según $C_k$ (o lo
+conserva si no es minúscula) y concatena ese resultado con `cesar(r, k)`.
+Por la hipótesis inductiva, el sufijo está cifrado correctamente; el primer
+carácter también lo está, y el orden no cambia. Así, `cesar(c :: r, k)` cumple
+la especificación.
+
+Por inducción estructural, `cesar` cifra correctamente cualquier mensaje
+finito.
+
+## Punto 2: `cesarCola`
+
+La función auxiliar recibe un acumulador. Para todo mensaje restante $m$,
+desplazamiento $k$ y acumulador $acc$, el invariante es
+
+$$
+\texttt{cesarCola}(m,k,acc) = acc \mathbin{+\!\!+} \texttt{cesar}(m,k),
+$$
+
+donde $+\!\!+$ denota concatenación de cadenas.
+
+**Caso base.** Si $m = ""$, la función devuelve `acc`. Como
+`cesar("", k) = ""`, el lado derecho del invariante es
+$acc \mathbin{+\!\!+} "" = acc$. Se cumple.
+
+**Paso inductivo.** Sea $m = c :: r$. La función calcula el carácter
+cifrado $C_k(c)$ y hace una llamada de cola con el mensaje $r$ y el acumulador
+$acc \mathbin{+\!\!+} C_k(c)$. Para caracteres fuera de `a`–`z`, $C_k(c)=c$.
+Por la hipótesis inductiva, esa llamada devuelve
+
+$$
+(acc \mathbin{+\!\!+} C_k(c)) \mathbin{+\!\!+} \texttt{cesar}(r,k).
+$$
+
+Por asociatividad de la concatenación, esto es
+$acc \mathbin{+\!\!+} \texttt{cesar}(c :: r,k)$, que es el invariante. Cada
+llamada consume un carácter, así que eventualmente llega al caso base. Con el
+acumulador inicial vacío, `cesarCola(m, k)` produce el mismo cifrado que
+`cesar(m, k)`.
+
+## Punto 3: `frecuencias`
+
+La especificación es devolver cada letra minúscula presente en el mensaje una
+sola vez, asociada a su cantidad de apariciones, ordenada por frecuencia
+descendente y, en caso de empate, por orden alfabético.
+
+Primero, `actConteo(c, lista)` conserva las cantidades de todas las letras de
+`lista` excepto que agrega una aparición de $c$: si $c$ ya está, incrementa su
+cantidad; si no está, agrega $(c,1)$. Esto se demuestra por inducción sobre la
+lista. Para la lista vacía, el resultado es `List((c, 1))`. Para una lista no
+vacía, si su cabeza es $c$, el código incrementa esa cantidad y deja intacta
+la cola; si la cabeza es distinta, la conserva y aplica el mismo razonamiento
+inductivo a la cola.
+
+Para `leer(texto, lista)`, el invariante es que la lista resultante representa
+las cantidades de las letras del acumulado más las minúsculas del texto aún
+por leer.
+
+**Caso base.** Cuando `texto` está vacío, devuelve `lista`. No queda ninguna
+letra pendiente y el conteo acumulado es el conteo requerido.
+
+**Paso inductivo.** Sea `texto = c :: resto`. Si $c$ es minúscula,
+`actConteo` agrega exactamente una aparición de $c$ al acumulado; de lo
+contrario, no cambia el conteo, pues los caracteres que no son minúsculas no
+forman parte de la especificación. Después se procesa `resto`. Por hipótesis
+inductiva, la llamada recursiva cuenta correctamente ese sufijo. Por tanto, al
+terminar, el conteo contiene exactamente las apariciones de las minúsculas del
+mensaje original.
+
+Finalmente, `sortWith` compara primero las cantidades en orden descendente y,
+si son iguales, los caracteres en orden ascendente. La ordenación cambia el
+orden de las tuplas, pero no sus cantidades. Así, `frecuencias` cumple la
+especificación.
+
+## Punto 4: `desplazamientoProbable`
+
+Si el mensaje no contiene minúsculas, `frecuencias` devuelve una lista vacía y
+la función devuelve $0$, tal como define el caso sin letras. Si sí contiene,
+por la corrección de `frecuencias`, su primera tupla tiene una letra con la
+mayor frecuencia. Bajo la suposición estadística descrita arriba, esa letra
+corresponde a la `e` original después de aplicar el desplazamiento. La función
+calcula cuántos lugares se avanzó en el alfabeto desde `e` hasta la letra más
+frecuente; al llegar a `z`, el conteo continúa desde `a`. Por ejemplo, si la
+letra más frecuente es `h`, el desplazamiento probable es 3, porque de `e` a
+`h` hay tres lugares.
+
+En el código, `(letra - 'e' + 26) % 26` hace ese cálculo usando los valores
+numéricos de las letras y deja el resultado entre 0 y 25. Por ello devuelve el
+desplazamiento correcto cuando se cumple la suposición estadística; sin ella,
+el resultado es solo una estimación.
+
+## Punto 4: `romperCesar`
+
+La función obtiene $k$ mediante `desplazamientoProbable` y aplica
+`cesarCola(m, -k)`. Si el texto se cifró con desplazamiento $k$ y la
+estimación lo recupera correctamente, cada letra minúscula se desplaza primero
+$k$ posiciones hacia adelante y luego $k$ hacia atrás. La suma de
+desplazamientos es $k + (-k) \equiv 0 \pmod{26}$, por lo que se recupera la
+letra original. Los caracteres no minúsculos se conservan en ambas funciones.
+Por tanto, `romperCesar` recupera el mensaje bajo la suposición indicada; en
+otro caso devuelve el resultado de descifrar con el desplazamiento estimado.
+
+## Punto 5: `combinaciones`
+
+Sea $P(n)$ la afirmación de que `combinaciones(n, a)` cuenta las cadenas de
+longitud $n$ formadas con un alfabeto de $a$ letras, sin letras iguales
+consecutivas.
+
+**Caso base $n=0$.** Existe exactamente una cadena de longitud cero: la cadena
+vacía. El código devuelve $1$.
+
+**Caso base $n=1$.** Cada una de las $a$ letras puede formar una cadena de
+longitud uno. El código devuelve $a$.
+
+**Paso inductivo.** Sea $n \geq 2$ y supongamos que
+`combinaciones(n - 1, a)` cuenta correctamente los prefijos válidos de
+longitud $n-1$. Para cada uno, la última letra de una extensión válida puede
+ser cualquiera de las $a-1$ letras distintas de la última letra del prefijo.
+Así, el total es
+
+$$
+\texttt{combinaciones}(n,a)
+=(a-1)\cdot\texttt{combinaciones}(n-1,a).
+$$
+
+Esta es precisamente la recurrencia que implementa el código. Junto con los
+dos casos base, demuestra por inducción que la función cuenta correctamente
+las cadenas para $n \geq 0$ y $a \geq 1$.
+
+## Punto 5: `vigenere`
+
+Si la clave está vacía, la función devuelve el mensaje sin cambios. Esto
+coincide con la regla implementada para ese caso. Supongamos ahora que la clave
+tiene longitud positiva. `aux` recorre la lista de caracteres del mensaje y
+mantiene un índice de clave y un acumulador en orden inverso.
+
+El invariante después de procesar un prefijo $p$ es:
+
+1. El índice `iClave` es la cantidad de minúsculas de $p$; los otros caracteres
+   no consumen clave.
+2. `acc.reverse` es el resultado Vigenère de $p$, copiando sin cambio los
+   caracteres que no son minúsculas.
+
+**Caso base.** Cuando no quedan caracteres, el prefijo procesado es el mensaje
+completo. La función devuelve `acc.reverse`, que por el invariante contiene
+el resultado completo en el orden original.
+
+**Paso inductivo.** Sea el siguiente carácter $c$.
+
+- Si $c$ es minúscula, se usa la letra de clave en la posición
+  `iClave % clave.length`, se desplaza $c$ según esa letra y se incrementa
+  `iClave`. Anteponer el carácter cifrado a `acc` hace que, al invertir el
+  acumulador, quede después del resultado del prefijo. El invariante se
+  conserva.
+- Si $c$ no es minúscula, se copia sin cambio y se mantiene `iClave`, pues ese
+  carácter no consume clave. Al anteponerlo a `acc`, también queda en la
+  posición correcta tras invertir. El invariante se conserva.
+
+En cada llamada se elimina un carácter del mensaje restante, así que la
+recursión termina. Por el invariante en el caso base, `vigenere` devuelve el
+cifrado correcto según las reglas anteriores.
